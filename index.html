@@ -1,847 +1,894 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Pizza, 
-  ShoppingCart, 
-  Phone, 
-  Menu as MenuIcon, 
-  X, 
-  ChefHat, 
-  Clock, 
-  MapPin, 
-  Star, 
-  ArrowRight,
-  Bot,
-  Zap,
-  Check,
-  Plus
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genesys Pizza - Cloud Kitchen</title>
+    
+    <!-- 1. Tailwind CSS (Fixes the styling issue) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Babel (Allows JSX to run in the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Custom Scrollbar Styles -->
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.2s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-// --- Components ---
+    <!-- 3. React Code with Module Imports -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        import { 
+            Pizza, 
+            ShoppingCart, 
+            Phone, 
+            Menu as MenuIcon, 
+            X, 
+            ChefHat, 
+            Clock, 
+            MapPin, 
+            Star, 
+            ArrowRight,
+            Bot,
+            Zap,
+            Check,
+            Plus
+        } from 'https://esm.sh/lucide-react@0.263.1';
 
-// 1. Pizza Builder Modal (New Component)
-const PizzaBuilderModal = ({ isOpen, onClose, onAdd }) => {
-  if (!isOpen) return null;
+        // --- Components ---
 
-  const [size, setSize] = useState('Large');
-  const [crust, setCrust] = useState('Hand Tossed');
-  const [selectedToppings, setSelectedToppings] = useState([]);
+        // 1. Pizza Builder Modal
+        const PizzaBuilderModal = ({ isOpen, onClose, onAdd }) => {
+            if (!isOpen) return null;
 
-  const sizes = { 'Small': 12, 'Medium': 14, 'Large': 16 };
-  const crusts = ['Thin', 'Hand Tossed', 'Pan', 'Stuffed (+$2)'];
-  const availableToppings = [
-    'Pepperoni', 'Sausage', 'Bacon', 'Chicken',
-    'Mushrooms', 'Onions', 'Peppers', 'Olives', 
-    'Spinach', 'Pineapple', 'Ham', 'Jalapeños'
-  ];
+            const [size, setSize] = useState('Large');
+            const [crust, setCrust] = useState('Hand Tossed');
+            const [selectedToppings, setSelectedToppings] = useState([]);
 
-  const toggleTopping = (topping) => {
-    if (selectedToppings.includes(topping)) {
-      setSelectedToppings(selectedToppings.filter(t => t !== topping));
-    } else {
-      setSelectedToppings([...selectedToppings, topping]);
-    }
-  };
+            const sizes = { 'Small': 12, 'Medium': 14, 'Large': 16 };
+            const crusts = ['Thin', 'Hand Tossed', 'Pan', 'Stuffed (+$2)'];
+            const availableToppings = [
+                'Pepperoni', 'Sausage', 'Bacon', 'Chicken',
+                'Mushrooms', 'Onions', 'Peppers', 'Olives', 
+                'Spinach', 'Pineapple', 'Ham', 'Jalapeños'
+            ];
 
-  const calculatePrice = () => {
-    let price = sizes[size];
-    if (crust.includes('+$2')) price += 2;
-    price += selectedToppings.length * 1.5; // $1.50 per topping
-    return price.toFixed(2);
-  };
+            const toggleTopping = (topping) => {
+                if (selectedToppings.includes(topping)) {
+                setSelectedToppings(selectedToppings.filter(t => t !== topping));
+                } else {
+                setSelectedToppings([...selectedToppings, topping]);
+                }
+            };
 
-  const handleAddToOrder = () => {
-    onAdd({
-      id: Date.now(),
-      name: `Custom ${size} Pizza`,
-      description: `${crust} crust with ${selectedToppings.length > 0 ? selectedToppings.join(', ') : 'cheese only'}.`,
-      price: parseFloat(calculatePrice()),
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=500&q=80',
-      isCustom: true
-    });
-    onClose();
-  };
+            const calculatePrice = () => {
+                let price = sizes[size];
+                if (crust.includes('+$2')) price += 2;
+                price += selectedToppings.length * 1.5; // $1.50 per topping
+                return price.toFixed(2);
+            };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="bg-orange-600 p-6 text-white flex justify-between items-center shrink-0">
-          <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <ChefHat className="h-6 w-6" /> Build Your Own
-            </h2>
-            <p className="text-orange-100 text-sm mt-1">Craft your perfect Genesys pie.</p>
-          </div>
-          <button onClick={onClose} className="hover:bg-orange-700 p-2 rounded-full transition-colors">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+            const handleAddToOrder = () => {
+                onAdd({
+                id: Date.now(),
+                name: `Custom ${size} Pizza`,
+                description: `${crust} crust with ${selectedToppings.length > 0 ? selectedToppings.join(', ') : 'cheese only'}.`,
+                price: parseFloat(calculatePrice()),
+                image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=500&q=80',
+                isCustom: true
+                });
+                onClose();
+            };
 
-        {/* Scrollable Body */}
-        <div className="p-6 overflow-y-auto custom-scrollbar">
-          {/* Size Section */}
-          <section className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
-              Select Size
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {Object.keys(sizes).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSize(s)}
-                  className={`py-3 px-4 rounded-lg border-2 font-medium transition-all ${
-                    size === s 
-                      ? 'border-orange-500 bg-orange-50 text-orange-700' 
-                      : 'border-gray-200 hover:border-orange-200 text-gray-600'
-                  }`}
-                >
-                  <div className="text-lg">{s}</div>
-                  <div className="text-sm opacity-75">${sizes[s]}</div>
-                </button>
-              ))}
-            </div>
-          </section>
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm" onClick={onClose}></div>
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
+                    {/* Header */}
+                    <div className="bg-orange-600 p-6 text-white flex justify-between items-center shrink-0">
+                    <div>
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <ChefHat className="h-6 w-6" /> Build Your Own
+                        </h2>
+                        <p className="text-orange-100 text-sm mt-1">Craft your perfect Genesys pie.</p>
+                    </div>
+                    <button onClick={onClose} className="hover:bg-orange-700 p-2 rounded-full transition-colors">
+                        <X className="h-6 w-6" />
+                    </button>
+                    </div>
 
-          {/* Crust Section */}
-          <section className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
-              Select Crust
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {crusts.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCrust(c)}
-                  className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                    crust === c 
-                      ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
-                      : 'border-gray-200 hover:border-orange-200 text-gray-600'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </section>
+                    {/* Scrollable Body */}
+                    <div className="p-6 overflow-y-auto custom-scrollbar">
+                    {/* Size Section */}
+                    <section className="mb-8">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                        Select Size
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4">
+                        {Object.keys(sizes).map((s) => (
+                            <button
+                            key={s}
+                            onClick={() => setSize(s)}
+                            className={`py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                                size === s 
+                                ? 'border-orange-500 bg-orange-50 text-orange-700' 
+                                : 'border-gray-200 hover:border-orange-200 text-gray-600'
+                            }`}
+                            >
+                            <div className="text-lg">{s}</div>
+                            <div className="text-sm opacity-75">${sizes[s]}</div>
+                            </button>
+                        ))}
+                        </div>
+                    </section>
 
-          {/* Toppings Section */}
-          <section>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
-              Add Toppings <span className="text-sm font-normal text-gray-500 ml-2">($1.50 each)</span>
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {availableToppings.map((t) => {
-                const isSelected = selectedToppings.includes(t);
-                return (
-                  <button
-                    key={t}
-                    onClick={() => toggleTopping(t)}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                      isSelected
-                        ? 'border-green-500 bg-green-50 text-green-800'
-                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <span className="text-sm font-medium">{t}</span>
-                    {isSelected && <Check className="h-4 w-4 text-green-600" />}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        </div>
+                    {/* Crust Section */}
+                    <section className="mb-8">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                        Select Crust
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {crusts.map((c) => (
+                            <button
+                            key={c}
+                            onClick={() => setCrust(c)}
+                            className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
+                                crust === c 
+                                ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
+                                : 'border-gray-200 hover:border-orange-200 text-gray-600'
+                            }`}
+                            >
+                            {c}
+                            </button>
+                        ))}
+                        </div>
+                    </section>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex items-center justify-between shrink-0">
-          <div>
-            <p className="text-sm text-gray-500">Total Price</p>
-            <p className="text-3xl font-bold text-gray-900">${calculatePrice()}</p>
-          </div>
-          <button 
-            onClick={handleAddToOrder}
-            className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <Plus className="h-5 w-5" /> Add to Order
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+                    {/* Toppings Section */}
+                    <section>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                        Add Toppings <span className="text-sm font-normal text-gray-500 ml-2">($1.50 each)</span>
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {availableToppings.map((t) => {
+                            const isSelected = selectedToppings.includes(t);
+                            return (
+                            <button
+                                key={t}
+                                onClick={() => toggleTopping(t)}
+                                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                                isSelected
+                                    ? 'border-green-500 bg-green-50 text-green-800'
+                                    : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                                }`}
+                            >
+                                <span className="text-sm font-medium">{t}</span>
+                                {isSelected && <Check className="h-4 w-4 text-green-600" />}
+                            </button>
+                            );
+                        })}
+                        </div>
+                    </section>
+                    </div>
 
-// 2. Navigation Bar (Modified with Trigger)
-const Navbar = ({ cartCount, currentPage, setCurrentPage, toggleCart, toggleInsights, isInsightsOpen }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [clickCount, setClickCount] = useState(0);
+                    {/* Footer */}
+                    <div className="border-t border-gray-200 p-6 bg-gray-50 flex items-center justify-between shrink-0">
+                    <div>
+                        <p className="text-sm text-gray-500">Total Price</p>
+                        <p className="text-3xl font-bold text-gray-900">${calculatePrice()}</p>
+                    </div>
+                    <button 
+                        onClick={handleAddToOrder}
+                        className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
+                    >
+                        <Plus className="h-5 w-5" /> Add to Order
+                    </button>
+                    </div>
+                </div>
+                </div>
+            );
+        };
 
-  // Easter Egg Trigger: Click "CLOUD KITCHEN" 5 times
-  const handleSecretClick = () => {
-    const newCount = clickCount + 1;
-    setClickCount(newCount);
-    if (newCount === 5) {
-      toggleInsights();
-      setClickCount(0);
-    }
-  };
+        // 2. Navigation Bar
+        const Navbar = ({ cartCount, currentPage, setCurrentPage, toggleCart, toggleInsights, isInsightsOpen }) => {
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [clickCount, setClickCount] = useState(0);
 
-  const navLinks = [
-    { id: 'home', label: 'Home' },
-    { id: 'menu', label: 'Order Online' },
-    { id: 'tracking', label: 'Track Order' },
-  ];
+            const handleSecretClick = () => {
+                const newCount = clickCount + 1;
+                setClickCount(newCount);
+                if (newCount === 5) {
+                toggleInsights();
+                setClickCount(0);
+                }
+            };
 
-  return (
-    <nav className="bg-white shadow-md sticky top-0 z-40 transition-all duration-300">
-      {isInsightsOpen && (
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-center text-xs py-1 font-bold animate-pulse">
-          ✨ GENESYS CX INSIGHT MODE UNLOCKED ✨
-        </div>
-      )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
-          {/* Logo */}
-          <div 
-            className="flex items-center cursor-pointer select-none" 
-            onClick={() => setCurrentPage('home')}
-          >
-            <div className="bg-orange-500 p-2 rounded-full mr-2 hover:rotate-180 transition-transform duration-700">
-              <Pizza className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Genesys Pizza</h1>
-              <p 
-                className={`text-xs font-medium cursor-help transition-colors duration-300 ${isInsightsOpen ? 'text-purple-600 font-bold' : 'text-gray-500 hover:text-orange-500'}`}
-                onClick={(e) => { e.stopPropagation(); handleSecretClick(); }}
-                title="Click 5 times for Developer Insights"
-              >
-                CLOUD KITCHEN {clickCount > 0 && clickCount < 5 && <span className="text-orange-400">({5 - clickCount}...)</span>}
-              </p>
-            </div>
-          </div>
+            const navLinks = [
+                { id: 'home', label: 'Home' },
+                { id: 'menu', label: 'Order Online' },
+                { id: 'tracking', label: 'Track Order' },
+            ];
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex space-x-8 items-center">
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => setCurrentPage(link.id)}
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  currentPage === link.id 
-                    ? 'text-orange-600 border-b-2 border-orange-600 pb-1' 
-                    : 'text-gray-600 hover:text-orange-500'
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
-            
-            <button 
-              onClick={toggleCart}
-              className="relative p-2 text-gray-600 hover:bg-orange-50 rounded-full transition-colors"
-            >
-              <ShoppingCart className="h-6 w-6" />
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-600 rounded-full">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-600 hover:text-gray-900 focus:outline-none"
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => {
-                  setCurrentPage(link.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                  currentPage === link.id 
-                    ? 'bg-orange-50 text-orange-600' 
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
-            <button 
-              onClick={() => {
-                toggleCart();
-                setIsMobileMenuOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50"
-            >
-              Cart ({cartCount})
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-};
-
-// 3. Hero Section (Modified with Value Props)
-const Hero = ({ setCurrentPage, isInsightsOpen }) => (
-  <div className="relative bg-gray-900 overflow-hidden">
-    <div className="absolute inset-0 opacity-40">
-      <img 
-        src="https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-        alt="Pizza Background" 
-        className="w-full h-full object-cover"
-        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1950&q=80'; }}
-      />
-    </div>
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-      <div className="md:w-2/3">
-        {isInsightsOpen && (
-          <div className="inline-flex items-center px-3 py-1 rounded-full border border-purple-500 bg-purple-900/50 text-purple-200 text-sm mb-4 animate-fade-in">
-            <Zap className="w-4 h-4 mr-2" /> Powered by Genesys Cloud CX
-          </div>
-        )}
-        <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6">
-          Experience the <span className="text-orange-500 relative group">
-            Future
-            {isInsightsOpen && (
-               <span className="absolute -top-12 left-0 bg-white text-gray-900 text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity w-48 z-10 pointer-events-none">
-                 Orchestrated by Genesys AI & Predictive Routing
-               </span>
-            )}
-          </span> of Pizza.
-        </h1>
-        <p className="text-xl text-gray-300 mb-8 max-w-2xl">
-          Powered by premium ingredients and seamless technology. Order online or chat with our Genesys Virtual Agent for the fastest delivery in town.
-        </p>
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <button 
-            onClick={() => setCurrentPage('menu')}
-            className="px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-lg transform hover:-translate-y-1 transition-all duration-200 flex items-center justify-center"
-          >
-            Order Now <ArrowRight className="ml-2 h-5 w-5" />
-          </button>
-          <button 
-            onClick={() => setCurrentPage('tracking')}
-            className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-gray-900 transition-all duration-200"
-          >
-            Track Order
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// 4. Menu Grid (Now with Build Your Own Feature)
-const Menu = ({ addToCart, isInsightsOpen }) => {
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-
-  const pizzas = [
-    {
-      id: 1,
-      name: "The Cloud Supreme",
-      description: "Pepperoni, sausage, mushrooms, onions, and green peppers.",
-      price: 18.99,
-      image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      id: 2,
-      name: "Genesys Garden",
-      description: "Fresh spinach, cherry tomatoes, black olives, and feta cheese.",
-      price: 16.99,
-      image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      id: 3,
-      name: "Data Driven Double Pepperoni",
-      description: "Double the pepperoni, double the mozzarella, crispy crust.",
-      price: 17.99,
-      image: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      id: 4,
-      name: "Virtual Veggie",
-      description: "Roasted red peppers, artichokes, mushrooms, and pesto drizzle.",
-      price: 15.99,
-      image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      id: 5,
-      name: "BBQ Bot Chicken",
-      description: "Grilled chicken, BBQ sauce, red onions, and cilantro.",
-      price: 18.50,
-      image: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      id: 6,
-      name: "Integration Italian",
-      description: "Salami, prosciutto, spicy sausage, and fresh basil.",
-      price: 19.99,
-      image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=500&q=80"
-    }
-  ];
-
-  // Hidden Item
-  const insightPizza = {
-    id: 999,
-    name: "The Omnichannel Supreme",
-    description: "Connects Voice, Chat, and Email into a single seamless pie. Ingredients: AI, Empathy, and Infinite Scale.",
-    price: 0.00,
-    isSpecial: true,
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80" 
-  };
-
-  const displayPizzas = isInsightsOpen ? [insightPizza, ...pizzas] : pizzas;
-
-  return (
-    <div className="py-12 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Our Signature Pizzas
-          </h2>
-          <p className="mt-4 text-xl text-gray-500">
-            Hand-tossed and baked to perfection.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          
-          {/* Build Your Own Card - Always First */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full border-2 border-dashed border-orange-300 group">
-            <div className="h-48 bg-orange-50 flex items-center justify-center relative overflow-hidden">
-               <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-               <ChefHat className="h-20 w-20 text-orange-400 group-hover:scale-110 transition-transform duration-500" />
-            </div>
-            <div className="p-6 flex-1 flex flex-col">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-bold text-gray-900">Build Your Own</h3>
-                <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded">
-                  Custom
-                </span>
-              </div>
-              <p className="text-gray-600 mb-6 flex-1">
-                Craft your masterpiece. Choose your size, crust, and unlimited fresh toppings.
-              </p>
-              <button 
-                onClick={() => setIsBuilderOpen(true)}
-                className="w-full bg-white border-2 border-orange-600 text-orange-600 py-3 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <ChefHat className="h-5 w-5" /> Start Building
-              </button>
-            </div>
-          </div>
-
-          {/* Standard Menu Items */}
-          {displayPizzas.map((pizza) => (
-            <div key={pizza.id} className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full ${pizza.isSpecial ? 'ring-4 ring-purple-500 transform scale-105' : ''}`}>
-              <div className="h-48 overflow-hidden relative">
-                {pizza.isSpecial && (
-                   <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
-                     GENESYS SPECIAL
-                   </div>
+            return (
+                <nav className="bg-white shadow-md sticky top-0 z-40 transition-all duration-300">
+                {isInsightsOpen && (
+                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-center text-xs py-1 font-bold animate-pulse">
+                    ✨ GENESYS CX INSIGHT MODE UNLOCKED ✨
+                    </div>
                 )}
-                <img 
-                  src={pizza.image} 
-                  alt={pizza.name} 
-                  className={`w-full h-full object-cover transition-transform duration-500 ${pizza.isSpecial ? '' : 'hover:scale-110'}`}
-                  style={pizza.isSpecial ? { filter: 'hue-rotate(240deg)' } : {}}
-                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80'; }}
-                />
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-gray-900">{pizza.name}</h3>
-                  <span className={`text-sm font-semibold px-2.5 py-0.5 rounded ${pizza.isSpecial ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>
-                    ${pizza.price}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-6 flex-1">{pizza.description}</p>
-                <button 
-                  onClick={() => addToCart(pizza)}
-                  className={`w-full text-white py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2 ${pizza.isSpecial ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-900 hover:bg-orange-600'}`}
-                >
-                  <ShoppingCart className="h-4 w-4" /> {pizza.isSpecial ? 'Deploy Value' : 'Add to Order'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <PizzaBuilderModal 
-        isOpen={isBuilderOpen} 
-        onClose={() => setIsBuilderOpen(false)} 
-        onAdd={addToCart} 
-      />
-    </div>
-  );
-};
-
-// 5. Order Tracking (Modified with Technical Reveal)
-const OrderTracking = ({ isInsightsOpen }) => {
-  const [orderId, setOrderId] = useState('');
-  const [status, setStatus] = useState(null);
-
-  const checkStatus = (e) => {
-    e.preventDefault();
-    setStatus('cooking'); 
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className={`bg-white shadow-xl rounded-2xl overflow-hidden transition-colors duration-500 ${isInsightsOpen ? 'ring-2 ring-purple-500' : ''}`}>
-          <div className={`${isInsightsOpen ? 'bg-purple-900' : 'bg-blue-900'} py-6 px-8 transition-colors duration-500`}>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <MapPin className="h-6 w-6" /> Track Your Order
-              {isInsightsOpen && <span className="text-xs bg-purple-700 px-2 py-1 rounded ml-auto">Visual IVR Mode</span>}
-            </h2>
-          </div>
-          
-          <div className="p-8">
-            {!status ? (
-              <form onSubmit={checkStatus} className="space-y-6">
-                <div>
-                  <label htmlFor="order-id" className="block text-sm font-medium text-gray-700">
-                    Order ID
-                  </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <input
-                      type="text"
-                      id="order-id"
-                      className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-4 py-3 sm:text-sm border-gray-300 border rounded-lg"
-                      placeholder="e.g. GP-1024"
-                      value={orderId}
-                      onChange={(e) => setOrderId(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Enter the ID sent to your phone or provided by our Voice Bot.
-                  </p>
-                </div>
-                <button
-                  type="submit"
-                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${isInsightsOpen ? 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500' : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'}`}
-                >
-                  Track Status
-                </button>
-              </form>
-            ) : (
-              <div className="space-y-8">
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Order #GP-1024</h3>
-                  <p className="text-green-600 font-semibold mt-1">Estimated Delivery: 25 mins</p>
-                </div>
-
-                <div className="relative">
-                  {/* Timeline */}
-                  <div className="absolute left-8 top-0 h-full w-0.5 bg-gray-200" aria-hidden="true"></div>
-                  
-                  <ul className="space-y-8 relative">
-                    <li className="flex items-start group relative">
-                      <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-100 ring-4 ring-white z-10 cursor-help">
-                        <Phone className="h-8 w-8 text-green-600" />
-                      </div>
-                      <div className="ml-6 pt-2">
-                        <h4 className="text-lg font-bold text-gray-900">Order Received</h4>
-                        <p className="text-gray-500">Verified by Genesys Voice Bot</p>
-                        
-                        {/* Hidden Insight */}
-                        <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
-                          <strong>CX Fact:</strong> The Voice Bot uses Natural Language Understanding (NLU) to capture 95% of orders without human intervention, reducing cost-per-call.
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between h-20 items-center">
+                    {/* Logo */}
+                    <div 
+                        className="flex items-center cursor-pointer select-none" 
+                        onClick={() => setCurrentPage('home')}
+                    >
+                        <div className="bg-orange-500 p-2 rounded-full mr-2 hover:rotate-180 transition-transform duration-700">
+                        <Pizza className="h-8 w-8 text-white" />
                         </div>
-                      </div>
-                    </li>
-
-                    <li className="flex items-start group relative">
-                      <div className="flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 ring-4 ring-white z-10 cursor-help">
-                        <ChefHat className="h-8 w-8 text-orange-600" />
-                      </div>
-                      <div className="ml-6 pt-2">
-                        <h4 className="text-lg font-bold text-gray-900">Preparing</h4>
-                        <p className="text-gray-500">Our chefs are crafting your pie.</p>
-                        
-                        {/* Hidden Insight */}
-                        <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
-                           <strong>CX Fact:</strong> Workforce Engagement Management (WEM) forecasted this surge, ensuring the right number of chefs were scheduled efficiently.
-                        </div>
-                      </div>
-                    </li>
-
-                    <li className="flex items-start opacity-70">
-                      <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 ring-4 ring-white z-10">
-                        <Clock className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <div className="ml-6 pt-2">
-                        <h4 className="text-lg font-bold text-gray-900">Out for Delivery</h4>
-                        <p className="text-gray-500">Pending...</p>
-                         
-                         {/* Hidden Insight */}
-                        <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
-                           <strong>CX Fact:</strong> You will receive a proactive SMS update via Genesys Agentless Dialer when the driver is 2 minutes away.
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                
-                <button 
-                  onClick={() => setStatus(null)}
-                  className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  Check another order
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 6. Cart Drawer (Unchanged structure, passed props)
-const CartDrawer = ({ isOpen, closeCart, cart, removeFromCart }) => {
-  if (!isOpen) return null;
-  
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-gray-900 bg-opacity-50 transition-opacity" onClick={closeCart}></div>
-      <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
-        <div className="w-screen max-w-md bg-white shadow-xl flex flex-col h-full transform transition-transform">
-          <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Shopping Cart</h2>
-              <button onClick={closeCart} className="text-gray-400 hover:text-gray-500">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="mt-8">
-              {cart.length === 0 ? (
-                <div className="text-center py-12">
-                  <ShoppingCart className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="mt-4 text-gray-500">Your cart is empty.</p>
-                  <p className="text-sm text-gray-400">Start adding pizzas!</p>
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-200">
-                  {cart.map((item, index) => (
-                    <li key={`${item.id}-${index}`} className="py-6 flex">
-                      <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-center object-cover"
-                          style={item.isSpecial ? { filter: 'hue-rotate(240deg)' } : {}}
-                          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80'; }}
-                        />
-                      </div>
-                      <div className="ml-4 flex-1 flex flex-col">
                         <div>
-                          <div className="flex justify-between text-base font-medium text-gray-900">
-                            <h3>{item.name}</h3>
-                            <p className="ml-4">${item.price}</p>
-                          </div>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Genesys Pizza</h1>
+                        <p 
+                            className={`text-xs font-medium cursor-help transition-colors duration-300 ${isInsightsOpen ? 'text-purple-600 font-bold' : 'text-gray-500 hover:text-orange-500'}`}
+                            onClick={(e) => { e.stopPropagation(); handleSecretClick(); }}
+                            title="Click 5 times for Developer Insights"
+                        >
+                            CLOUD KITCHEN {clickCount > 0 && clickCount < 5 && <span className="text-orange-400">({5 - clickCount}...)</span>}
+                        </p>
                         </div>
-                        <div className="flex-1 flex items-end justify-between text-sm">
-                          <p className="text-gray-500">Qty 1</p>
-                          <button
-                            type="button"
-                            onClick={() => removeFromCart(index)}
-                            className="font-medium text-orange-600 hover:text-orange-500"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          {cart.length > 0 && (
-            <div className="border-t border-gray-200 py-6 px-4 sm:px-6 bg-gray-50">
-              <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
-                <p>Subtotal</p>
-                <p>${total.toFixed(2)}</p>
-              </div>
-              <p className="mt-0.5 text-sm text-gray-500 mb-6">
-                Shipping and taxes calculated at checkout.
-              </p>
-              <button
-                className="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-600 hover:bg-orange-700"
-              >
-                Checkout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 7. Footer
-const Footer = () => (
-  <footer className="bg-gray-900 text-white">
-    <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div>
-          <div className="flex items-center mb-4">
-            <Pizza className="h-6 w-6 text-orange-500 mr-2" />
-            <h3 className="text-xl font-bold">Genesys Pizza</h3>
-          </div>
-          <p className="text-gray-400 text-sm">
-            Merging the art of pizza making with the science of customer experience.
-          </p>
-        </div>
-        <div>
-          <h4 className="text-lg font-semibold mb-4 text-orange-500">Store Info</h4>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            <li className="flex items-center gap-2"><MapPin className="h-4 w-4"/> 123 Cloud Avenue, Tech City</li>
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4"/> 1-800-GEN-PIZZA</li>
-            <li className="flex items-center gap-2"><Clock className="h-4 w-4"/> Mon-Sun: 10am - 11pm</li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-lg font-semibold mb-4 text-orange-500">Customer Service</h4>
-          <p className="text-gray-400 text-sm mb-2">
-            Having trouble? Use our Virtual Agent in the bottom corner for immediate assistance.
-          </p>
-          <div className="flex gap-1 text-yellow-400">
-            <Star className="h-4 w-4 fill-current"/>
-            <Star className="h-4 w-4 fill-current"/>
-            <Star className="h-4 w-4 fill-current"/>
-            <Star className="h-4 w-4 fill-current"/>
-            <Star className="h-4 w-4 fill-current"/>
-          </div>
-        </div>
-      </div>
-      <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 group">
-        &copy; 2024 Genesys Pizza Demo. All rights reserved. 
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 ml-2 text-purple-400">
-           | Orchestrated by Genesys Cloud
-        </span>
-      </div>
-    </div>
-  </footer>
-);
-
-// --- Main App Component ---
-
-export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
-
-  // Easter Egg: Console Log for Developers
-  useEffect(() => {
-    console.log(
-      "%c 🍕 Genesys Cloud Developer Mode 🍕 \n\nWelcome! This demo showcases how Genesys Cloud APIs can integrate into modern web experiences.\n\nTry clicking 'Cloud Kitchen' in the navbar 5 times...",
-      "background: #FF4F00; color: white; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold;"
-    );
-  }, []);
-
-  const addToCart = (product) => {
-    setCart([...cart, product]);
-    setIsCartOpen(true);
-  };
-
-  const removeFromCart = (index) => {
-    const newCart = [...cart];
-    newCart.splice(index, 1);
-    setCart(newCart);
-  };
-
-  const renderPage = () => {
-    switch(currentPage) {
-      case 'home':
-        return (
-          <>
-            <Hero setCurrentPage={setCurrentPage} isInsightsOpen={isInsightsOpen} />
-            <div className="bg-white py-12">
-               <div className="max-w-7xl mx-auto px-4 text-center">
-                 <h2 className="text-2xl font-bold text-gray-800 mb-8">Why Choose Genesys Pizza?</h2>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="p-6 border rounded-xl hover:shadow-lg transition">
-                       <Clock className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                       <h3 className="font-bold text-lg">Fast Delivery</h3>
-                       <p className="text-gray-600 mt-2">Optimized routing ensures your pizza arrives hot.</p>
                     </div>
-                    <div className="p-6 border rounded-xl hover:shadow-lg transition">
-                       <Bot className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                       <h3 className="font-bold text-lg">Smart Ordering</h3>
-                       <p className="text-gray-600 mt-2">Order via our website, voice bot, or chat seamlessly.</p>
+
+                    {/* Desktop Nav */}
+                    <div className="hidden md:flex space-x-8 items-center">
+                        {navLinks.map((link) => (
+                        <button
+                            key={link.id}
+                            onClick={() => setCurrentPage(link.id)}
+                            className={`text-sm font-medium transition-colors duration-200 ${
+                            currentPage === link.id 
+                                ? 'text-orange-600 border-b-2 border-orange-600 pb-1' 
+                                : 'text-gray-600 hover:text-orange-500'
+                            }`}
+                        >
+                            {link.label}
+                        </button>
+                        ))}
+                        
+                        <button 
+                        onClick={toggleCart}
+                        className="relative p-2 text-gray-600 hover:bg-orange-50 rounded-full transition-colors"
+                        >
+                        <ShoppingCart className="h-6 w-6" />
+                        {cartCount > 0 && (
+                            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-600 rounded-full">
+                            {cartCount}
+                            </span>
+                        )}
+                        </button>
                     </div>
-                    <div className="p-6 border rounded-xl hover:shadow-lg transition">
-                       <ChefHat className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                       <h3 className="font-bold text-lg">Premium Quality</h3>
-                       <p className="text-gray-600 mt-2">Locally sourced ingredients, prepared fresh daily.</p>
+
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center">
+                        <button 
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="text-gray-600 hover:text-gray-900 focus:outline-none"
+                        >
+                        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+                        </button>
                     </div>
-                 </div>
-               </div>
+                    </div>
+                </div>
+
+                {/* Mobile Menu Dropdown */}
+                {isMobileMenuOpen && (
+                    <div className="md:hidden bg-white border-t">
+                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                        {navLinks.map((link) => (
+                        <button
+                            key={link.id}
+                            onClick={() => {
+                            setCurrentPage(link.id);
+                            setIsMobileMenuOpen(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
+                            currentPage === link.id 
+                                ? 'bg-orange-50 text-orange-600' 
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                            {link.label}
+                        </button>
+                        ))}
+                        <button 
+                        onClick={() => {
+                            toggleCart();
+                            setIsMobileMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50"
+                        >
+                        Cart ({cartCount})
+                        </button>
+                    </div>
+                    </div>
+                )}
+                </nav>
+            );
+        };
+
+        // 3. Hero Section
+        const Hero = ({ setCurrentPage, isInsightsOpen }) => (
+            <div className="relative bg-gray-900 overflow-hidden">
+                <div className="absolute inset-0 opacity-40">
+                <img 
+                    src="https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
+                    alt="Pizza Background" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1950&q=80'; }}
+                />
+                </div>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+                <div className="md:w-2/3">
+                    {isInsightsOpen && (
+                    <div className="inline-flex items-center px-3 py-1 rounded-full border border-purple-500 bg-purple-900/50 text-purple-200 text-sm mb-4 animate-fade-in">
+                        <Zap className="w-4 h-4 mr-2" /> Powered by Genesys Cloud CX
+                    </div>
+                    )}
+                    <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6">
+                    Experience the <span className="text-orange-500 relative group">
+                        Future
+                        {isInsightsOpen && (
+                        <span className="absolute -top-12 left-0 bg-white text-gray-900 text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity w-48 z-10 pointer-events-none">
+                            Orchestrated by Genesys AI & Predictive Routing
+                        </span>
+                        )}
+                    </span> of Pizza.
+                    </h1>
+                    <p className="text-xl text-gray-300 mb-8 max-w-2xl">
+                    Powered by premium ingredients and seamless technology. Order online or chat with our Genesys Virtual Agent for the fastest delivery in town.
+                    </p>
+                    <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button 
+                        onClick={() => setCurrentPage('menu')}
+                        className="px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-lg transform hover:-translate-y-1 transition-all duration-200 flex items-center justify-center"
+                    >
+                        Order Now <ArrowRight className="ml-2 h-5 w-5" />
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage('tracking')}
+                        className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-gray-900 transition-all duration-200"
+                    >
+                        Track Order
+                    </button>
+                    </div>
+                </div>
+                </div>
             </div>
-          </>
         );
-      case 'menu':
-        return <Menu addToCart={addToCart} isInsightsOpen={isInsightsOpen} />;
-      case 'tracking':
-        return <OrderTracking isInsightsOpen={isInsightsOpen} />;
-      default:
-        return <Hero setCurrentPage={setCurrentPage} isInsightsOpen={isInsightsOpen} />;
-    }
-  };
 
-  return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
-      <Navbar 
-        cartCount={cart.length} 
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        toggleCart={() => setIsCartOpen(true)}
-        toggleInsights={() => setIsInsightsOpen(!isInsightsOpen)}
-        isInsightsOpen={isInsightsOpen}
-      />
-      
-      <main className="flex-grow">
-        {renderPage()}
-      </main>
+        // 4. Menu Grid
+        const Menu = ({ addToCart, isInsightsOpen }) => {
+            const [isBuilderOpen, setIsBuilderOpen] = useState(false);
 
-      <Footer />
-      
-      {/* Drawer */}
-      <CartDrawer 
-        isOpen={isCartOpen} 
-        closeCart={() => setIsCartOpen(false)} 
-        cart={cart}
-        removeFromCart={removeFromCart}
-      />
-    </div>
-  );
-}
+            const pizzas = [
+                {
+                id: 1,
+                name: "The Cloud Supreme",
+                description: "Pepperoni, sausage, mushrooms, onions, and green peppers.",
+                price: 18.99,
+                image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=500&q=80"
+                },
+                {
+                id: 2,
+                name: "Genesys Garden",
+                description: "Fresh spinach, cherry tomatoes, black olives, and feta cheese.",
+                price: 16.99,
+                image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80"
+                },
+                {
+                id: 3,
+                name: "Data Driven Double Pepperoni",
+                description: "Double the pepperoni, double the mozzarella, crispy crust.",
+                price: 17.99,
+                image: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=500&q=80"
+                },
+                {
+                id: 4,
+                name: "Virtual Veggie",
+                description: "Roasted red peppers, artichokes, mushrooms, and pesto drizzle.",
+                price: 15.99,
+                image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80"
+                },
+                {
+                id: 5,
+                name: "BBQ Bot Chicken",
+                description: "Grilled chicken, BBQ sauce, red onions, and cilantro.",
+                price: 18.50,
+                image: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=500&q=80"
+                },
+                {
+                id: 6,
+                name: "Integration Italian",
+                description: "Salami, prosciutto, spicy sausage, and fresh basil.",
+                price: 19.99,
+                image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=500&q=80"
+                }
+            ];
+
+            const insightPizza = {
+                id: 999,
+                name: "The Omnichannel Supreme",
+                description: "Connects Voice, Chat, and Email into a single seamless pie. Ingredients: AI, Empathy, and Infinite Scale.",
+                price: 0.00,
+                isSpecial: true,
+                image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80" 
+            };
+
+            const displayPizzas = isInsightsOpen ? [insightPizza, ...pizzas] : pizzas;
+
+            return (
+                <div className="py-12 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                    <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                        Our Signature Pizzas
+                    </h2>
+                    <p className="mt-4 text-xl text-gray-500">
+                        Hand-tossed and baked to perfection.
+                    </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    {/* Build Your Own Card */}
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full border-2 border-dashed border-orange-300 group">
+                        <div className="h-48 bg-orange-50 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <ChefHat className="h-20 w-20 text-orange-400 group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div className="p-6 flex-1 flex flex-col">
+                        <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">Build Your Own</h3>
+                            <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded">
+                            Custom
+                            </span>
+                        </div>
+                        <p className="text-gray-600 mb-6 flex-1">
+                            Craft your masterpiece. Choose your size, crust, and unlimited fresh toppings.
+                        </p>
+                        <button 
+                            onClick={() => setIsBuilderOpen(true)}
+                            className="w-full bg-white border-2 border-orange-600 text-orange-600 py-3 rounded-lg font-bold hover:bg-orange-600 hover:text-white transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                            <ChefHat className="h-5 w-5" /> Start Building
+                        </button>
+                        </div>
+                    </div>
+
+                    {/* Standard Menu Items */}
+                    {displayPizzas.map((pizza) => (
+                        <div key={pizza.id} className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full ${pizza.isSpecial ? 'ring-4 ring-purple-500 transform scale-105' : ''}`}>
+                        <div className="h-48 overflow-hidden relative">
+                            {pizza.isSpecial && (
+                            <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">
+                                GENESYS SPECIAL
+                            </div>
+                            )}
+                            <img 
+                            src={pizza.image} 
+                            alt={pizza.name} 
+                            className={`w-full h-full object-cover transition-transform duration-500 ${pizza.isSpecial ? '' : 'hover:scale-110'}`}
+                            style={pizza.isSpecial ? { filter: 'hue-rotate(240deg)' } : {}}
+                            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80'; }}
+                            />
+                        </div>
+                        <div className="p-6 flex-1 flex flex-col">
+                            <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{pizza.name}</h3>
+                            <span className={`text-sm font-semibold px-2.5 py-0.5 rounded ${pizza.isSpecial ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>
+                                ${pizza.price}
+                            </span>
+                            </div>
+                            <p className="text-gray-600 mb-6 flex-1">{pizza.description}</p>
+                            <button 
+                            onClick={() => addToCart(pizza)}
+                            className={`w-full text-white py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2 ${pizza.isSpecial ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-900 hover:bg-orange-600'}`}
+                            >
+                            <ShoppingCart className="h-4 w-4" /> {pizza.isSpecial ? 'Deploy Value' : 'Add to Order'}
+                            </button>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+
+                <PizzaBuilderModal 
+                    isOpen={isBuilderOpen} 
+                    onClose={() => setIsBuilderOpen(false)} 
+                    onAdd={addToCart} 
+                />
+                </div>
+            );
+        };
+
+        // 5. Order Tracking
+        const OrderTracking = ({ isInsightsOpen }) => {
+            const [orderId, setOrderId] = useState('');
+            const [status, setStatus] = useState(null);
+
+            const checkStatus = (e) => {
+                e.preventDefault();
+                setStatus('cooking'); 
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl mx-auto">
+                    <div className={`bg-white shadow-xl rounded-2xl overflow-hidden transition-colors duration-500 ${isInsightsOpen ? 'ring-2 ring-purple-500' : ''}`}>
+                    <div className={`${isInsightsOpen ? 'bg-purple-900' : 'bg-blue-900'} py-6 px-8 transition-colors duration-500`}>
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <MapPin className="h-6 w-6" /> Track Your Order
+                        {isInsightsOpen && <span className="text-xs bg-purple-700 px-2 py-1 rounded ml-auto">Visual IVR Mode</span>}
+                        </h2>
+                    </div>
+                    
+                    <div className="p-8">
+                        {!status ? (
+                        <form onSubmit={checkStatus} className="space-y-6">
+                            <div>
+                            <label htmlFor="order-id" className="block text-sm font-medium text-gray-700">
+                                Order ID
+                            </label>
+                            <div className="mt-1 relative rounded-md shadow-sm">
+                                <input
+                                type="text"
+                                id="order-id"
+                                className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-4 py-3 sm:text-sm border-gray-300 border rounded-lg"
+                                placeholder="e.g. GP-1024"
+                                value={orderId}
+                                onChange={(e) => setOrderId(e.target.value)}
+                                required
+                                />
+                            </div>
+                            <p className="mt-2 text-sm text-gray-500">
+                                Enter the ID sent to your phone or provided by our Voice Bot.
+                            </p>
+                            </div>
+                            <button
+                            type="submit"
+                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${isInsightsOpen ? 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500' : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'}`}
+                            >
+                            Track Status
+                            </button>
+                        </form>
+                        ) : (
+                        <div className="space-y-8">
+                            <div className="border-b pb-4">
+                            <h3 className="text-lg font-medium text-gray-900">Order #GP-1024</h3>
+                            <p className="text-green-600 font-semibold mt-1">Estimated Delivery: 25 mins</p>
+                            </div>
+
+                            <div className="relative">
+                            {/* Timeline */}
+                            <div className="absolute left-8 top-0 h-full w-0.5 bg-gray-200" aria-hidden="true"></div>
+                            
+                            <ul className="space-y-8 relative">
+                                <li className="flex items-start group relative">
+                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-100 ring-4 ring-white z-10 cursor-help">
+                                    <Phone className="h-8 w-8 text-green-600" />
+                                </div>
+                                <div className="ml-6 pt-2">
+                                    <h4 className="text-lg font-bold text-gray-900">Order Received</h4>
+                                    <p className="text-gray-500">Verified by Genesys Voice Bot</p>
+                                    
+                                    {/* Hidden Insight */}
+                                    <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
+                                    <strong>CX Fact:</strong> The Voice Bot uses Natural Language Understanding (NLU) to capture 95% of orders without human intervention, reducing cost-per-call.
+                                    </div>
+                                </div>
+                                </li>
+
+                                <li className="flex items-start group relative">
+                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 ring-4 ring-white z-10 cursor-help">
+                                    <ChefHat className="h-8 w-8 text-orange-600" />
+                                </div>
+                                <div className="ml-6 pt-2">
+                                    <h4 className="text-lg font-bold text-gray-900">Preparing</h4>
+                                    <p className="text-gray-500">Our chefs are crafting your pie.</p>
+                                    
+                                    {/* Hidden Insight */}
+                                    <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
+                                    <strong>CX Fact:</strong> Workforce Engagement Management (WEM) forecasted this surge, ensuring the right number of chefs were scheduled efficiently.
+                                    </div>
+                                </div>
+                                </li>
+
+                                <li className="flex items-start opacity-70">
+                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 ring-4 ring-white z-10">
+                                    <Clock className="h-8 w-8 text-gray-400" />
+                                </div>
+                                <div className="ml-6 pt-2">
+                                    <h4 className="text-lg font-bold text-gray-900">Out for Delivery</h4>
+                                    <p className="text-gray-500">Pending...</p>
+                                    
+                                    {/* Hidden Insight */}
+                                    <div className={`mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-700 border-l-4 border-purple-500 transition-all duration-300 ${isInsightsOpen ? 'block animate-slide-in' : 'hidden'}`}>
+                                    <strong>CX Fact:</strong> You will receive a proactive SMS update via Genesys Agentless Dialer when the driver is 2 minutes away.
+                                    </div>
+                                </div>
+                                </li>
+                            </ul>
+                            </div>
+                            
+                            <button 
+                            onClick={() => setStatus(null)}
+                            className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                            Check another order
+                            </button>
+                        </div>
+                        )}
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        // 6. Cart Drawer
+        const CartDrawer = ({ isOpen, closeCart, cart, removeFromCart }) => {
+            if (!isOpen) return null;
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+            return (
+                <div className="fixed inset-0 z-50 overflow-hidden">
+                <div className="absolute inset-0 bg-gray-900 bg-opacity-50 transition-opacity" onClick={closeCart}></div>
+                <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
+                    <div className="w-screen max-w-md bg-white shadow-xl flex flex-col h-full transform transition-transform">
+                    <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
+                        <div className="flex items-start justify-between">
+                        <h2 className="text-lg font-medium text-gray-900">Shopping Cart</h2>
+                        <button onClick={closeCart} className="text-gray-400 hover:text-gray-500">
+                            <X className="h-6 w-6" />
+                        </button>
+                        </div>
+
+                        <div className="mt-8">
+                        {cart.length === 0 ? (
+                            <div className="text-center py-12">
+                            <ShoppingCart className="mx-auto h-12 w-12 text-gray-300" />
+                            <p className="mt-4 text-gray-500">Your cart is empty.</p>
+                            <p className="text-sm text-gray-400">Start adding pizzas!</p>
+                            </div>
+                        ) : (
+                            <ul className="divide-y divide-gray-200">
+                            {cart.map((item, index) => (
+                                <li key={`${item.id}-${index}`} className="py-6 flex">
+                                <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
+                                    <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-full h-full object-center object-cover"
+                                    style={item.isSpecial ? { filter: 'hue-rotate(240deg)' } : {}}
+                                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80'; }}
+                                    />
+                                </div>
+                                <div className="ml-4 flex-1 flex flex-col">
+                                    <div>
+                                    <div className="flex justify-between text-base font-medium text-gray-900">
+                                        <h3>{item.name}</h3>
+                                        <p className="ml-4">${item.price}</p>
+                                    </div>
+                                    </div>
+                                    <div className="flex-1 flex items-end justify-between text-sm">
+                                    <p className="text-gray-500">Qty 1</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeFromCart(index)}
+                                        className="font-medium text-orange-600 hover:text-orange-500"
+                                    >
+                                        Remove
+                                    </button>
+                                    </div>
+                                </div>
+                                </li>
+                            ))}
+                            </ul>
+                        )}
+                        </div>
+                    </div>
+
+                    {cart.length > 0 && (
+                        <div className="border-t border-gray-200 py-6 px-4 sm:px-6 bg-gray-50">
+                        <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
+                            <p>Subtotal</p>
+                            <p>${total.toFixed(2)}</p>
+                        </div>
+                        <p className="mt-0.5 text-sm text-gray-500 mb-6">
+                            Shipping and taxes calculated at checkout.
+                        </p>
+                        <button
+                            className="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-600 hover:bg-orange-700"
+                        >
+                            Checkout
+                        </button>
+                        </div>
+                    )}
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        // 7. Footer
+        const Footer = () => (
+            <footer className="bg-gray-900 text-white">
+                <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                    <div className="flex items-center mb-4">
+                        <Pizza className="h-6 w-6 text-orange-500 mr-2" />
+                        <h3 className="text-xl font-bold">Genesys Pizza</h3>
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                        Merging the art of pizza making with the science of customer experience.
+                    </p>
+                    </div>
+                    <div>
+                    <h4 className="text-lg font-semibold mb-4 text-orange-500">Store Info</h4>
+                    <ul className="space-y-2 text-gray-400 text-sm">
+                        <li className="flex items-center gap-2"><MapPin className="h-4 w-4"/> 123 Cloud Avenue, Tech City</li>
+                        <li className="flex items-center gap-2"><Phone className="h-4 w-4"/> 1-800-GEN-PIZZA</li>
+                        <li className="flex items-center gap-2"><Clock className="h-4 w-4"/> Mon-Sun: 10am - 11pm</li>
+                    </ul>
+                    </div>
+                    <div>
+                    <h4 className="text-lg font-semibold mb-4 text-orange-500">Customer Service</h4>
+                    <p className="text-gray-400 text-sm mb-2">
+                        Having trouble? Use our Virtual Agent in the bottom corner for immediate assistance.
+                    </p>
+                    <div className="flex gap-1 text-yellow-400">
+                        <Star className="h-4 w-4 fill-current"/>
+                        <Star className="h-4 w-4 fill-current"/>
+                        <Star className="h-4 w-4 fill-current"/>
+                        <Star className="h-4 w-4 fill-current"/>
+                        <Star className="h-4 w-4 fill-current"/>
+                    </div>
+                    </div>
+                </div>
+                <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 group">
+                    &copy; 2024 Genesys Pizza Demo. All rights reserved. 
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 ml-2 text-purple-400">
+                    | Orchestrated by Genesys Cloud
+                    </span>
+                </div>
+                </div>
+            </footer>
+        );
+
+        // --- Main App Component ---
+        function App() {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [cart, setCart] = useState([]);
+            const [isCartOpen, setIsCartOpen] = useState(false);
+            const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+
+            // Easter Egg: Console Log for Developers
+            useEffect(() => {
+                console.log(
+                "%c 🍕 Genesys Cloud Developer Mode 🍕 \n\nWelcome! This demo showcases how Genesys Cloud APIs can integrate into modern web experiences.\n\nTry clicking 'Cloud Kitchen' in the navbar 5 times...",
+                "background: #FF4F00; color: white; padding: 10px; border-radius: 5px; font-size: 14px; font-weight: bold;"
+                );
+            }, []);
+
+            const addToCart = (product) => {
+                setCart([...cart, product]);
+                setIsCartOpen(true);
+            };
+
+            const removeFromCart = (index) => {
+                const newCart = [...cart];
+                newCart.splice(index, 1);
+                setCart(newCart);
+            };
+
+            const renderPage = () => {
+                switch(currentPage) {
+                case 'home':
+                    return (
+                    <>
+                        <Hero setCurrentPage={setCurrentPage} isInsightsOpen={isInsightsOpen} />
+                        <div className="bg-white py-12">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-8">Why Choose Genesys Pizza?</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="p-6 border rounded-xl hover:shadow-lg transition">
+                                <Clock className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                                <h3 className="font-bold text-lg">Fast Delivery</h3>
+                                <p className="text-gray-600 mt-2">Optimized routing ensures your pizza arrives hot.</p>
+                                </div>
+                                <div className="p-6 border rounded-xl hover:shadow-lg transition">
+                                <Bot className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                                <h3 className="font-bold text-lg">Smart Ordering</h3>
+                                <p className="text-gray-600 mt-2">Order via our website, voice bot, or chat seamlessly.</p>
+                                </div>
+                                <div className="p-6 border rounded-xl hover:shadow-lg transition">
+                                <ChefHat className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                                <h3 className="font-bold text-lg">Premium Quality</h3>
+                                <p className="text-gray-600 mt-2">Locally sourced ingredients, prepared fresh daily.</p>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </>
+                    );
+                case 'menu':
+                    return <Menu addToCart={addToCart} isInsightsOpen={isInsightsOpen} />;
+                case 'tracking':
+                    return <OrderTracking isInsightsOpen={isInsightsOpen} />;
+                default:
+                    return <Hero setCurrentPage={setCurrentPage} isInsightsOpen={isInsightsOpen} />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
+                <Navbar 
+                    cartCount={cart.length} 
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                    toggleCart={() => setIsCartOpen(true)}
+                    toggleInsights={() => setIsInsightsOpen(!isInsightsOpen)}
+                    isInsightsOpen={isInsightsOpen}
+                />
+                
+                <main className="flex-grow">
+                    {renderPage()}
+                </main>
+
+                <Footer />
+                
+                {/* Drawer */}
+                <CartDrawer 
+                    isOpen={isCartOpen} 
+                    closeCart={() => setIsCartOpen(false)} 
+                    cart={cart}
+                    removeFromCart={removeFromCart}
+                />
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
